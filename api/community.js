@@ -59,7 +59,9 @@ export function createHandler({ store, secret, secure = true }) {
 
 export default {
   async fetch(request) {
-    const { UPSTASH_REDIS_REST_URL: url, UPSTASH_REDIS_REST_TOKEN: token, JOIN_COOKIE_SECRET: secret } = process.env;
+    const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+    const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
+    const secret = process.env.JOIN_COOKIE_SECRET;
     if (!url || !token || !secret || secret.length < 32) {
       return Response.json({ error: 'Unable to connect. Try again.' }, {
         status: 503, headers: { 'Cache-Control': 'no-store' },
