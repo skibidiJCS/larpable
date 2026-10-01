@@ -1,0 +1,8 @@
+.DS_Store
+.vercel/
+.env
+.env.*
+!.env.example
+.preview/
+node_modules/
+public/
