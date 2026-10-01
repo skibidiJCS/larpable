@@ -72,7 +72,7 @@ function loadGoogle() {
     const script = document.createElement('script');
     script.src = 'https://accounts.google.com/gsi/client';
     script.async = true;
-    const timeout = setTimeout(() => { script.remove(); reject(new Error('Sign-in could not load. Please try again.')); }, 10000);
+    const timeout = setTimeout(() => { script.remove(); reject(new Error('Google sign-in could not load. Check your connection or content blocker, then close and retry.')); }, 20000);
     script.onload = () => {
       clearTimeout(timeout);
       if (window.google?.accounts?.id) resolve();
@@ -112,6 +112,7 @@ async function finishSignIn(response) {
 button.addEventListener('click', async () => {
   if (busy || joined) return;
   busy = true;
+  googleButton.replaceChildren();
   signInStatus.textContent = 'Loading sign-in…';
   signInDialog.showModal();
   try {
@@ -122,13 +123,19 @@ button.addEventListener('click', async () => {
     if (!signInDialog.open) return;
     const configuration = `${googleClientId}:${nonce}`;
     if (googleConfiguration !== configuration) {
-      window.google.accounts.id.initialize({ client_id: googleClientId, nonce, callback: finishSignIn, auto_select: false });
+      window.google.accounts.id.initialize({
+        client_id: googleClientId, nonce, callback: finishSignIn, auto_select: false,
+        use_fedcm_for_button: true, button_auto_select: false,
+      });
       googleConfiguration = configuration;
     }
     googleButton.replaceChildren();
     window.google.accounts.id.renderButton(googleButton, {
       type: 'standard', theme: 'outline', size: 'large', text: 'continue_with',
       width: Math.min(280, googleButton.clientWidth),
+      click_listener: () => {
+        signInStatus.textContent = 'Complete sign-in in Google’s window. If nothing opens, allow popups or open this page in Safari or Chrome.';
+      },
     });
     signInStatus.textContent = '';
   } catch (error) {

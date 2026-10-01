@@ -133,8 +133,8 @@ main {
   position: absolute;
   top: 6px;
   right: 6px;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   padding: 0;
   border: 0;
   background: transparent;
@@ -171,6 +171,8 @@ main {
 @media (max-width: 420px) {
   .count { margin-bottom: 36px; }
   .join-button { padding-inline: 54px; gap: 10px; }
+  .sign-in-dialog { width: calc(100vw - 32px); padding: 52px 16px 20px; }
+  .sign-in-dialog h1 { font-size: 1.375rem; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before { animation: none !important; transition: none !important; }
