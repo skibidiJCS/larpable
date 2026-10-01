@@ -200,20 +200,43 @@ button.addEventListener('pointerleave', () => {
 
 countValue.addEventListener('pointermove', (event) => {
   if (reducedMotion.matches || event.pointerType !== 'mouse') return;
-  const rect = countValue.getBoundingClientRect();
-  const x = Math.max(-1, Math.min(1, (event.clientX - rect.left) / rect.width * 2 - 1));
-  countValue.style.setProperty('--count-tilt', `${x * 2}deg`);
+  countValue.querySelectorAll('.count-digit').forEach((digit) => {
+    const rect = digit.getBoundingClientRect();
+    const distance = event.clientX - (rect.left + rect.width / 2);
+    const influence = Math.max(0, 1 - Math.abs(distance) / 180);
+    digit.style.setProperty('--digit-x', `${Math.max(-6, Math.min(6, distance * .06)) * influence}px`);
+    digit.style.setProperty('--digit-y', `${-18 * influence}px`);
+    digit.style.setProperty('--digit-tilt', `${Math.max(-8, Math.min(8, distance * .12)) * influence}deg`);
+    digit.style.setProperty('--digit-scale', String(1 + influence * .08));
+  });
 });
-countValue.addEventListener('pointerleave', () => countValue.style.setProperty('--count-tilt', '0deg'));
-countValue.addEventListener('pointerdown', () => {
+function resetCountMotion() {
+  countValue.querySelectorAll('.count-digit').forEach((digit) => {
+    ['--digit-x', '--digit-y', '--digit-tilt', '--digit-scale'].forEach((property) => digit.style.removeProperty(property));
+  });
+}
+countValue.addEventListener('pointerleave', resetCountMotion);
+countValue.addEventListener('pointercancel', resetCountMotion);
+countValue.addEventListener('pointerdown', (event) => {
   if (reducedMotion.matches) return;
-  countValue.getAnimations().forEach((animation) => animation.cancel());
-  countValue.animate([
-    { transform: 'scale(1)' },
-    { transform: 'scale(.97)', offset: .25 },
-    { transform: 'scale(1.035)', offset: .65 },
-    { transform: 'scale(1)' },
-  ], { duration: 480, easing: 'cubic-bezier(.2,.8,.2,1)' });
+  const digits = [...countValue.querySelectorAll('.count-digit')];
+  const nearest = digits.reduce((best, digit, index) => {
+    const rect = digit.getBoundingClientRect();
+    const distance = Math.abs(event.clientX - rect.left - rect.width / 2);
+    return distance < best.distance ? { index, distance } : best;
+  }, { index: 0, distance: Infinity }).index;
+  digits.forEach((digit, index) => {
+    digit.getAnimations().forEach((animation) => animation.cancel());
+    const resting = getComputedStyle(digit).transform;
+    const direction = index % 2 ? -1 : 1;
+    digit.animate([
+      { transform: resting },
+      { transform: 'translateY(5px) scale(1.08,.9)', offset: .16 },
+      { transform: `translateY(-24px) rotate(${direction * 9}deg) scale(.98,1.14)`, offset: .42 },
+      { transform: `translateY(3px) rotate(${-direction * 3}deg) scale(1.04,.97)`, offset: .7 },
+      { transform: resting },
+    ], { duration: 760, delay: Math.min(Math.abs(index - nearest) * 65, 325), easing: 'cubic-bezier(.2,.7,.3,1)' });
+  });
 });
 
 document.addEventListener('visibilitychange', () => {

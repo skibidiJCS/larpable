@@ -33,7 +33,12 @@ main {
   user-select: none;
   transition: transform 300ms cubic-bezier(.2,.8,.2,1), filter 300ms ease;
 }
-.count-digit { display: inline-block; }
+.count-digit {
+  display: inline-block;
+  transform: translate(var(--digit-x, 0px), var(--digit-y, 0px)) rotate(var(--digit-tilt, 0deg)) scale(var(--digit-scale, 1));
+  transform-origin: 50% 80%;
+  transition: transform 400ms cubic-bezier(.18,.85,.25,1.3);
+}
 .count-digit:nth-child(3n + 2) { color: #c2b7ef; }
 .count-digit:nth-child(3n + 3) { color: #f4bf8f; }
 .count-label {
@@ -88,8 +93,7 @@ main {
 }
 @media (hover: hover) and (pointer: fine) {
   .count-value:hover {
-    transform: translateY(-3px) rotate(var(--count-tilt, 0deg));
-    filter: drop-shadow(7px 8px 0 #293c32);
+    filter: drop-shadow(9px 12px 0 #293c32);
   }
   .join-button:hover:not(:disabled) {
     background: #c2b7ef;
@@ -182,7 +186,7 @@ main {
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before { animation: none !important; transition: none !important; }
-  .join-button, .count-value { transform: none !important; }
+  .join-button, .count-value, .count-digit { transform: none !important; }
 }
 @media (forced-colors: active) {
   .join-button { border: 3px solid ButtonText; background: ButtonFace; color: ButtonText; box-shadow: none; }
