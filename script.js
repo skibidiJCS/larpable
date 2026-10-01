@@ -15,6 +15,7 @@ let googleLoading;
 let googleConfiguration = '';
 let joined = false;
 let busy = false;
+let displayedTotal;
 
 
 function render(data) {
@@ -22,13 +23,24 @@ function render(data) {
   nonce = data.nonce;
   joined = data.joined;
   const total = new Intl.NumberFormat().format(data.count);
-  countValue.style.setProperty('--digits', String(total.length));
-  countValue.replaceChildren(...Array.from(total, (character) => {
-    const digit = document.createElement('span');
-    digit.className = 'count-digit';
-    digit.textContent = character;
-    return digit;
-  }));
+  if (total !== displayedTotal) {
+    countValue.style.setProperty('--digits', String(total.length));
+    countValue.replaceChildren(...Array.from(total, (character) => {
+      const digit = document.createElement('span');
+      digit.className = 'count-digit';
+      digit.textContent = character;
+      return digit;
+    }));
+    if (!reducedMotion.matches) {
+      countValue.querySelectorAll('.count-digit').forEach((digit, index) => {
+        digit.animate([
+          { opacity: 0, transform: 'translateY(14px) scale(.96)' },
+          { opacity: 1, transform: 'translateY(0) scale(1)' },
+        ], { duration: 420, delay: Math.min(index * 35, 210), easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'backwards' });
+      });
+    }
+    displayedTotal = total;
+  }
   buttonLabel.textContent = joined ? "You're part of it!" : 'Join the larp community';
   buttonMark.textContent = joined ? '✓' : '+';
   status.textContent = '';
@@ -184,6 +196,24 @@ button.addEventListener('pointermove', (event) => {
 });
 button.addEventListener('pointerleave', () => {
   button.style.setProperty('--tilt', '0deg');
+});
+
+countValue.addEventListener('pointermove', (event) => {
+  if (reducedMotion.matches || event.pointerType !== 'mouse') return;
+  const rect = countValue.getBoundingClientRect();
+  const x = Math.max(-1, Math.min(1, (event.clientX - rect.left) / rect.width * 2 - 1));
+  countValue.style.setProperty('--count-tilt', `${x * 2}deg`);
+});
+countValue.addEventListener('pointerleave', () => countValue.style.setProperty('--count-tilt', '0deg'));
+countValue.addEventListener('pointerdown', () => {
+  if (reducedMotion.matches) return;
+  countValue.getAnimations().forEach((animation) => animation.cancel());
+  countValue.animate([
+    { transform: 'scale(1)' },
+    { transform: 'scale(.97)', offset: .25 },
+    { transform: 'scale(1.035)', offset: .65 },
+    { transform: 'scale(1)' },
+  ], { duration: 480, easing: 'cubic-bezier(.2,.8,.2,1)' });
 });
 
 document.addEventListener('visibilitychange', () => {
