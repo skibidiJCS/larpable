@@ -1,112 +1,142 @@
 :root {
   color-scheme: light;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-  background: #fafafa;
-  color: #fff;
+  background: #dfece2;
+  color: #293c32;
   -webkit-font-smoothing: antialiased;
 }
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-}
-
+* { box-sizing: border-box; }
+body { margin: 0; }
 main {
   min-height: 100vh;
   min-height: 100svh;
   display: grid;
   place-items: center;
-  padding: 24px;
+  padding: 64px 24px;
+  overflow: clip;
 }
-
-.community {
-  position: relative;
-  width: min(17rem, 100%);
-  text-align: center;
+.community { width: min(38rem, 100%); text-align: center; }
+.count { margin-bottom: 48px; }
+.count-value {
+  display: block;
+  color: #eea1b3;
+  font-size: min(clamp(8.5rem, 21vw, 12rem), calc((100vw - 48px) / var(--digits, 1) * 1.45), calc(38rem / var(--digits, 1) * 1.45));
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.07em;
+  font-variant-numeric: lining-nums tabular-nums;
+  overflow-wrap: anywhere;
+  -webkit-text-stroke: 2px #293c32;
+  text-shadow: 5px 5px 0 #293c32;
 }
-
-.count {
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  width: min(300px, calc(100vw - 48px));
-  margin: 18px 0 0;
-  color: #707070;
-  font-size: 0.875rem;
+.count-digit { display: inline-block; }
+.count-digit:nth-child(3n + 2) { color: #c2b7ef; }
+.count-digit:nth-child(3n + 3) { color: #f4bf8f; }
+.count-label {
+  display: block;
+  margin-top: 24px;
+  font-size: 1rem;
+  font-weight: 600;
   line-height: 1.5;
-  transform: translateX(-50%);
 }
-
+.button-wrap { position: relative; width: min(22rem, 100%); margin: 0 auto; }
 .join-button {
-  display: inline-flex;
+  --tilt: 0deg;
+  position: relative;
+  display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  gap: 16px;
   width: 100%;
-  max-width: 100%;
-  min-height: 58px;
-  padding: 18px 30px;
-  border: 1px solid #171717;
-  border-radius: 14px;
-  background: linear-gradient(180deg, #303030, #232323);
-  color: #fff;
-  box-shadow: 0 1px 0 rgb(255 255 255 / 12%) inset,
-    0 2px 3px rgb(0 0 0 / 8%),
-    0 7px 18px rgb(0 0 0 / 7%);
-  font: 500 1rem / 1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-  letter-spacing: -0.015em;
-  text-align: center;
-  text-decoration: none;
+  min-height: 76px;
+  padding: 15px 17px 15px 24px;
+  border: 3px solid #293c32;
+  border-radius: 5px;
+  background: #f4bf8f;
+  color: #293c32;
+  box-shadow: 7px 7px 0 #293c32;
+  font: 750 1rem / 1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  letter-spacing: -0.02em;
+  text-align: left;
   cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+  transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
 }
-
-@media (hover: hover) {
+.button-mark {
+  display: grid;
+  place-items: center;
+  flex: 0 0 36px;
+  height: 36px;
+  border: 2px solid #293c32;
+  border-radius: 50%;
+  background: #c2b7ef;
+  color: #293c32;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1;
+  transition: transform 220ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
   .join-button:hover:not(:disabled) {
-    transform: translateY(-2px);
-    border-color: #444;
-    box-shadow: 0 1px 0 rgb(255 255 255 / 16%) inset,
-      0 3px 5px rgb(0 0 0 / 9%),
-      0 10px 24px rgb(0 0 0 / 10%);
+    background: #c2b7ef;
+    transform: translate(-3px, -3px) rotate(var(--tilt));
+    box-shadow: 10px 10px 0 #293c32;
   }
+  .join-button:hover:not(:disabled) .button-mark { background: #f4bf8f; transform: rotate(180deg); }
 }
-
-.join-button:focus-visible {
-  outline: 2px solid #222;
-  outline-offset: 5px;
-}
-
-.join-button:active:not(:disabled) {
-  transform: translateY(1px);
-  box-shadow: 0 1px 0 rgb(255 255 255 / 10%) inset,
-    0 1px 2px rgb(0 0 0 / 10%);
-}
-
-.join-button:disabled {
-  cursor: default;
-}
-
+.join-button:focus-visible { outline: 3px solid #293c32; outline-offset: 12px; }
+.join-button:active:not(:disabled) { transform: translate(6px, 6px); box-shadow: 1px 1px 0 #293c32; }
+.join-button:disabled { cursor: default; }
+.join-button[aria-busy="true"] .button-mark { animation: turn 1.8s linear infinite; }
 .join-button[data-joined="true"] {
-  background: #efefef;
-  border-color: #dedede;
-  color: #525252;
-  box-shadow: 0 1px 2px rgb(0 0 0 / 3%);
+  background: #afd7bc;
+  transform: translate(4px, 4px);
+  box-shadow: 3px 3px 0 #293c32;
 }
-
+.join-button[data-joined="true"] .button-mark { background: #e8f1d4; font-size: 1.1rem; }
+.status {
+  min-height: 3rem;
+  margin: 26px 0 0;
+  padding: 0 8px;
+  color: #61444a;
+  font-size: .875rem;
+  line-height: 1.5;
+}
+.celebration { position: absolute; inset: 0; pointer-events: none; }
+.confetti {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 9px;
+  height: 13px;
+  border: 1px solid #293c32;
+  background: var(--color);
+  animation: confetti 850ms cubic-bezier(.15,.7,.3,1) both;
+}
+.confetti:nth-child(3n) { border-radius: 50%; width: 10px; height: 10px; }
+.count[data-celebrating="true"] .count-value { animation: count-pop 650ms cubic-bezier(.2,.8,.2,1); }
+@keyframes confetti {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.4); }
+  15% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(var(--rotation)) scale(.8); }
+}
+@keyframes count-pop {
+  0%, 100% { transform: scale(1); }
+  35% { transform: scale(1.1) rotate(-2deg); }
+  65% { transform: scale(.98) rotate(1deg); }
+}
+@keyframes turn { to { transform: rotate(360deg); } }
+@media (max-width: 420px) {
+  .count { margin-bottom: 36px; }
+  .join-button { padding-left: 17px; gap: 10px; }
+}
 @media (prefers-reduced-motion: reduce) {
-  .join-button {
-    transition: none;
-  }
+  *, *::before { animation: none !important; transition: none !important; }
+  .join-button { transform: none !important; }
 }
-
 @media (forced-colors: active) {
-  .join-button {
-    border-color: ButtonText;
-    background: ButtonFace;
-    color: ButtonText;
-  }
+  .join-button { border: 3px solid ButtonText; background: ButtonFace; color: ButtonText; box-shadow: none; }
+  .count-value, .count-digit { color: CanvasText; text-shadow: none; -webkit-text-stroke: 0; }
+  .button-mark { background: ButtonFace; color: ButtonText; }
 }
