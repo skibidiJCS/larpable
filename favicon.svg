@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>larpable</title>
+  <rect x="10" y="10" width="50" height="50" rx="5" fill="#293c32"/>
+  <rect x="4" y="4" width="50" height="50" rx="4" fill="#eea1b3" stroke="#293c32" stroke-width="4"/>
+  <path d="M17 14h10v24h16v10H17z" fill="#293c32"/>
+</svg>

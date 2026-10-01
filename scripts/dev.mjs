@@ -15,6 +15,9 @@ const assets = new Map([
   ['/', ['index.html', 'text/html']],
   ['/styles.css', ['styles.css', 'text/css']],
   ['/script.js', ['script.js', 'text/javascript']],
+  ['/favicon.svg', ['favicon.svg', 'image/svg+xml']],
+  ['/favicon.ico', ['favicon.ico', 'image/x-icon']],
+  ['/apple-touch-icon.png', ['apple-touch-icon.png', 'image/png']],
 ]);
 const server = createServer(async (req, res) => {
   try {
