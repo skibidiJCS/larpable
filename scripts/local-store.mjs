@@ -1,27 +1,36 @@
 import { existsSync, readFileSync, writeFileSync, renameSync } from 'node:fs';
 
-// Local preview only. Production always uses Redis, never serverless disk.
+// Preview only. Production always uses durable Redis storage.
 export function localStore(file) {
   return {
-    async run(visitorId, action, addressHash) {
+    async run(accountId, action, addressHash, legacyId = '') {
       const data = existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : { members: [], rates: {} };
+      data.accounts ||= {};
+      data.claims ||= {};
       const members = new Set(data.members);
       let limited = false;
-      if (action === 'join' && !members.has(visitorId)) {
+      if (action === 'join' && !Object.hasOwn(data.accounts, accountId)) {
         const now = Date.now();
-        for (const [key, rate] of Object.entries(data.rates)) {
-          if (rate.until <= now) delete data.rates[key];
-        }
+        for (const [key, rate] of Object.entries(data.rates)) if (rate.until <= now) delete data.rates[key];
         const rate = data.rates[addressHash] || { count: 0, until: now + 60000 };
         rate.count += 1;
         data.rates[addressHash] = rate;
         limited = rate.count > 20;
-        if (!limited) members.add(visitorId);
-        data.members = [...members];
+        if (!limited) {
+          let member = `account:${accountId}`;
+          if (legacyId && members.has(legacyId) && !Object.hasOwn(data.claims, legacyId)) {
+            member = legacyId;
+            data.claims[legacyId] = accountId;
+          } else {
+            members.add(member);
+          }
+          data.accounts[accountId] = member;
+          data.members = [...members];
+        }
         writeFileSync(`${file}.tmp`, JSON.stringify(data));
         renameSync(`${file}.tmp`, file);
       }
-      return { joined: members.has(visitorId), count: members.size, limited };
+      return { joined: Object.hasOwn(data.accounts, accountId), count: members.size, limited };
     },
   };
 }

@@ -4,12 +4,14 @@ import { randomBytes } from 'node:crypto';
 import { createHandler } from '../api/community.js';
 import { localStore } from './local-store.mjs';
 
+if (existsSync('.env.local')) process.loadEnvFile('.env.local');
 mkdirSync('.preview', { recursive: true });
 if (!existsSync('.preview/secret')) writeFileSync('.preview/secret', randomBytes(32).toString('hex'));
 const handler = createHandler({
   store: localStore('.preview/counter.json'),
   secret: readFileSync('.preview/secret', 'utf8'),
   secure: false,
+  googleClientId: process.env.GOOGLE_CLIENT_ID || '',
 });
 const assets = new Map([
   ['/', ['index.html', 'text/html']],
@@ -21,13 +23,15 @@ const assets = new Map([
 ]);
 const server = createServer(async (req, res) => {
   try {
-    const url = new URL(req.url, 'http://127.0.0.1:4310');
+    const host = req.headers.host;
+    if (!['127.0.0.1:4310', 'localhost:4310'].includes(host)) { res.writeHead(400); res.end(); return; }
+    const url = new URL(req.url, `http://${host}`);
     if (url.pathname === '/api/community') {
       const chunks = [];
       let size = 0;
       for await (const chunk of req) {
         size += chunk.length;
-        if (size > 1024) { res.writeHead(413); res.end(); return; }
+        if (size > 12288) { res.writeHead(413); res.end(); return; }
         chunks.push(chunk);
       }
       const request = new Request(url, {
@@ -35,7 +39,10 @@ const server = createServer(async (req, res) => {
         ...(req.method === 'POST' ? { body: Buffer.concat(chunks) } : {}),
       });
       const response = await handler(request);
-      res.writeHead(response.status, Object.fromEntries(response.headers));
+      const responseHeaders = Object.fromEntries(response.headers);
+      const cookies = response.headers.getSetCookie();
+      if (cookies.length) responseHeaders['set-cookie'] = cookies;
+      res.writeHead(response.status, responseHeaders);
       res.end(await response.text());
       return;
     }
@@ -49,4 +56,4 @@ const server = createServer(async (req, res) => {
     res.writeHead(500); res.end('Unable to load.');
   }
 });
-server.listen(4310, '127.0.0.1', () => console.log('Preview: http://127.0.0.1:4310 (local counter)'));
+server.listen(4310, '127.0.0.1', () => console.log('Preview: http://localhost:4310 (local counter; real Google sign-in requires GOOGLE_CLIENT_ID)'));

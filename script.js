@@ -6,17 +6,21 @@ const buttonMark = document.querySelector('.button-mark');
 const status = document.querySelector('.status');
 const celebration = document.querySelector('.celebration');
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-const storageKey = 'larpable.visitor';
-let visitor = '';
+const signInDialog = document.querySelector('.sign-in-dialog');
+const signInStatus = document.querySelector('.sign-in-status');
+const googleButton = document.querySelector('.google-button');
+let googleClientId = '';
+let nonce = '';
+let googleLoading;
+let googleConfiguration = '';
 let joined = false;
 let busy = false;
 
-try { visitor = localStorage.getItem(storageKey) || ''; } catch {}
 
 function render(data) {
-  visitor = data.visitor;
+  googleClientId = data.googleClientId;
+  nonce = data.nonce;
   joined = data.joined;
-  try { localStorage.setItem(storageKey, visitor); } catch {}
   const total = new Intl.NumberFormat().format(data.count);
   countValue.style.setProperty('--digits', String(total.length));
   countValue.replaceChildren(...Array.from(total, (character) => {
@@ -32,16 +36,14 @@ function render(data) {
   button.disabled = joined;
 }
 
-async function request(method) {
+async function request(method, credential) {
   const response = await fetch('/api/community', {
     method,
     credentials: 'same-origin',
     cache: 'no-store',
     signal: AbortSignal.timeout(12000),
-    headers: method === 'POST'
-      ? { 'Content-Type': 'application/json' }
-      : { 'X-Visitor-Token': visitor },
-    ...(method === 'POST' ? { body: JSON.stringify({ visitor }) } : {}),
+    headers: method === 'POST' ? { 'Content-Type': 'application/json' } : {},
+    ...(method === 'POST' ? { body: JSON.stringify({ credential }) } : {}),
   });
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || 'Please try again.');
@@ -63,29 +65,85 @@ async function refresh() {
   }
 }
 
-button.addEventListener('click', async () => {
-  if (busy || joined) return;
+function loadGoogle() {
+  if (window.google?.accounts?.id) return Promise.resolve();
+  if (googleLoading) return googleLoading;
+  googleLoading = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    const timeout = setTimeout(() => { script.remove(); reject(new Error('Sign-in could not load. Please try again.')); }, 10000);
+    script.onload = () => {
+      clearTimeout(timeout);
+      if (window.google?.accounts?.id) resolve();
+      else { script.remove(); reject(new Error('Sign-in could not load. Please try again.')); }
+    };
+    script.onerror = () => { clearTimeout(timeout); script.remove(); reject(new Error('Sign-in could not load. Please try again.')); };
+    document.head.append(script);
+  }).catch((error) => { googleLoading = undefined; throw error; });
+  return googleLoading;
+}
+
+async function finishSignIn(response) {
+  if (busy) return;
   busy = true;
   button.disabled = true;
   buttonLabel.textContent = 'Joining…';
   button.setAttribute('aria-busy', 'true');
+  signInStatus.textContent = 'Joining…';
+  googleButton.setAttribute('inert', '');
   try {
-    // Refresh the server-issued identity first; this also reconciles other tabs.
-    render(await request('GET'));
-    if (!joined) {
-      button.disabled = true;
-      buttonLabel.textContent = 'Joining…';
-      render(await request('POST'));
-      celebrate();
-    }
+    const previouslyJoined = joined;
+    render(await request('POST', response.credential));
+    signInDialog.close();
+    if (!previouslyJoined) celebrate();
   } catch (error) {
-    status.textContent = error.message === 'Please wait a minute before trying again.'
-      ? error.message : 'Unable to join. Try again.';
+    signInStatus.textContent = error.message;
+    status.textContent = error.message;
     button.disabled = joined;
     buttonLabel.textContent = joined ? "You're part of it!" : 'Join the larp community';
   } finally {
+    googleButton.removeAttribute('inert');
     button.removeAttribute('aria-busy');
     busy = false;
+  }
+}
+
+button.addEventListener('click', async () => {
+  if (busy || joined) return;
+  busy = true;
+  signInStatus.textContent = 'Loading sign-in…';
+  signInDialog.showModal();
+  try {
+    render(await request('GET'));
+    if (joined) { signInDialog.close(); return; }
+    if (!googleClientId) throw new Error('Sign-in is unavailable. Please try later.');
+    await loadGoogle();
+    if (!signInDialog.open) return;
+    const configuration = `${googleClientId}:${nonce}`;
+    if (googleConfiguration !== configuration) {
+      window.google.accounts.id.initialize({ client_id: googleClientId, nonce, callback: finishSignIn, auto_select: false });
+      googleConfiguration = configuration;
+    }
+    googleButton.replaceChildren();
+    window.google.accounts.id.renderButton(googleButton, {
+      type: 'standard', theme: 'outline', size: 'large', text: 'continue_with',
+      width: Math.min(280, googleButton.clientWidth),
+    });
+    signInStatus.textContent = '';
+  } catch (error) {
+    signInStatus.textContent = error.message;
+  } finally {
+    busy = false;
+  }
+});
+
+document.querySelector('.dialog-close').addEventListener('click', () => signInDialog.close());
+signInDialog.addEventListener('click', (event) => {
+  const rect = signInDialog.getBoundingClientRect();
+  if (event.target === signInDialog &&
+      (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom)) {
+    signInDialog.close();
   }
 });
 
@@ -122,12 +180,7 @@ button.addEventListener('pointerleave', () => {
 });
 
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') refresh();
+  if (document.visibilityState === 'visible' && !signInDialog.open) refresh();
 });
-window.addEventListener('storage', (event) => {
-  if (event.key === storageKey && event.newValue !== visitor) {
-    visitor = event.newValue || visitor;
-    refresh();
-  }
-});
+
 refresh();

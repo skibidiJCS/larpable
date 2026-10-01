@@ -10,12 +10,13 @@ body { margin: 0; }
 main {
   min-height: 100vh;
   min-height: 100svh;
+  min-height: 100dvh;
   display: grid;
   place-items: center;
   padding: 64px 24px;
   overflow: clip;
 }
-.community { width: min(38rem, 100%); text-align: center; }
+.community { position: relative; width: min(38rem, 100%); text-align: center; }
 .count { margin-bottom: 48px; }
 .count-value {
   display: block;
@@ -46,11 +47,11 @@ main {
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 16px;
   width: 100%;
   min-height: 76px;
-  padding: 15px 17px 15px 24px;
+  padding: 15px 60px;
   border: 3px solid #293c32;
   border-radius: 5px;
   background: #f4bf8f;
@@ -58,16 +59,21 @@ main {
   box-shadow: 7px 7px 0 #293c32;
   font: 750 1rem / 1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
   letter-spacing: -0.02em;
-  text-align: left;
+  text-align: center;
   cursor: pointer;
+  user-select: none;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
 }
 .button-mark {
+  position: absolute;
+  right: 17px;
+  top: 50%;
+  margin-top: -18px;
   display: grid;
   place-items: center;
-  flex: 0 0 36px;
+  width: 36px;
   height: 36px;
   border: 2px solid #293c32;
   border-radius: 50%;
@@ -76,7 +82,7 @@ main {
   font-size: 1.5rem;
   font-weight: 600;
   line-height: 1;
-  transition: transform 220ms ease;
+  transition: rotate 220ms ease;
 }
 @media (hover: hover) and (pointer: fine) {
   .join-button:hover:not(:disabled) {
@@ -84,7 +90,7 @@ main {
     transform: translate(-3px, -3px) rotate(var(--tilt));
     box-shadow: 10px 10px 0 #293c32;
   }
-  .join-button:hover:not(:disabled) .button-mark { background: #f4bf8f; transform: rotate(180deg); }
+  .join-button:hover:not(:disabled) .button-mark { background: #f4bf8f; rotate: 180deg; }
 }
 .join-button:focus-visible { outline: 3px solid #293c32; outline-offset: 12px; }
 .join-button:active:not(:disabled) { transform: translate(6px, 6px); box-shadow: 1px 1px 0 #293c32; }
@@ -97,7 +103,10 @@ main {
 }
 .join-button[data-joined="true"] .button-mark { background: #e8f1d4; font-size: 1.1rem; }
 .status {
-  min-height: 3rem;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
   margin: 26px 0 0;
   padding: 0 8px;
   color: #61444a;
@@ -105,6 +114,37 @@ main {
   line-height: 1.5;
 }
 .celebration { position: absolute; inset: 0; pointer-events: none; }
+.sign-in-dialog {
+  width: min(25rem, calc(100vw - 48px));
+  max-height: calc(100dvh - 48px);
+  overflow: auto;
+  padding: 42px 28px 24px;
+  border: 3px solid #293c32;
+  border-radius: 5px;
+  background: #dfece2;
+  color: #293c32;
+  box-shadow: 8px 8px 0 #293c32;
+  text-align: center;
+}
+.sign-in-dialog::backdrop { background: rgb(41 60 50 / 35%); }
+.sign-in-dialog h1 { margin: 0 0 12px; font-size: 1.5rem; line-height: 1.2; }
+.sign-in-dialog p { font-size: 1rem; line-height: 1.5; }
+.dialog-close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 1.75rem;
+  cursor: pointer;
+}
+.dialog-close:focus-visible { outline: 2px solid #293c32; }
+.google-button { display: flex; justify-content: center; margin-top: 24px; min-height: 44px; }
+.sign-in-dialog .sign-in-status { min-height: 1.5rem; margin-bottom: 0; font-size: .875rem; color: #61444a; }
 .confetti {
   position: absolute;
   left: 50%;
@@ -127,10 +167,10 @@ main {
   35% { transform: scale(1.1) rotate(-2deg); }
   65% { transform: scale(.98) rotate(1deg); }
 }
-@keyframes turn { to { transform: rotate(360deg); } }
+@keyframes turn { to { rotate: 360deg; } }
 @media (max-width: 420px) {
   .count { margin-bottom: 36px; }
-  .join-button { padding-left: 17px; gap: 10px; }
+  .join-button { padding-inline: 54px; gap: 10px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before { animation: none !important; transition: none !important; }
